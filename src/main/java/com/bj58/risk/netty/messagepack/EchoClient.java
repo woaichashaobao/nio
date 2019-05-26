@@ -5,6 +5,9 @@ import io.netty.channel.*;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioSocketChannel;
+import io.netty.handler.codec.LengthFieldBasedFrameDecoder;
+import io.netty.handler.codec.LengthFieldPrepender;
+import io.netty.handler.logging.LoggingHandler;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -25,15 +28,20 @@ public class EchoClient {
                     .channel(NioSocketChannel.class)
                     .option(ChannelOption.TCP_NODELAY, true)
                     .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, 3000)
+                    .handler(new LoggingHandler())
                     .handler(new ChannelInitializer<SocketChannel>() {
                         @Override
                         protected void initChannel(SocketChannel ch) throws Exception {
-                            ch.pipeline().addLast("msg encoder", new MessageEncoder())
+                            ch.pipeline()
+                                    .addLast("frameDecoder", new LengthFieldBasedFrameDecoder(65535, 0, 2, 0, 2))
                                     .addLast("msg decoder", new MessageDecoder())
+                                    .addLast("frameEncoder", new LengthFieldPrepender(2))
+                                    .addLast("msg encoder", new MessageEncoder())
                                     .addLast(new EchoClientHandler())
                             ;
                         }
                     });
+
             ChannelFuture sync = bootstrap.connect(host, port).sync();
             sync.channel().closeFuture().sync();
         } catch (Exception e) {
@@ -49,14 +57,12 @@ public class EchoClient {
 
         @Override
         public void channelActive(ChannelHandlerContext ctx) throws Exception {
-            List<UserInfo> list = new ArrayList<>();
-            int count = 1000;
+            int count = 1;
             while (count > 0) {
                 count--;
-                UserInfo wangwenchang = new UserInfo("wangwenchang", 29);
-                list.add(wangwenchang);
+                UserInfo userInfo = new UserInfo("wangwenchang", 29);
+                ctx.write(userInfo);
             }
-            list.forEach(userInfo -> ctx.write(userInfo));
             ctx.flush();
         }
 

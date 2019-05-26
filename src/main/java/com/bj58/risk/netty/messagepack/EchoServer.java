@@ -8,6 +8,8 @@ import io.netty.channel.*;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
+import io.netty.handler.codec.LengthFieldBasedFrameDecoder;
+import io.netty.handler.codec.LengthFieldPrepender;
 import io.netty.handler.logging.LogLevel;
 import io.netty.handler.logging.LoggingHandler;
 
@@ -33,7 +35,10 @@ public class EchoServer {
                     .childHandler(new ChannelInitializer<SocketChannel>() {
                         @Override
                         protected void initChannel(SocketChannel ch) throws Exception {
-                            ch.pipeline().addLast("msg decoder", new MessageDecoder())
+                            ch.pipeline()
+                                    .addLast("frameDecoder", new LengthFieldBasedFrameDecoder(65535, 0, 2, 0, 2))
+                                    .addLast("msg decoder", new MessageDecoder())
+                                    .addLast("frame encoder", new LengthFieldPrepender(2))
                                     .addLast("msg encoder", new MessageEncoder())
                                     .addLast(new EchoServerHandel());
                         }
@@ -54,9 +59,8 @@ public class EchoServer {
 
         @Override
         public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
-            List<UserInfo> userInfos = (List<UserInfo>) msg;
-            userInfos.forEach(userInfo -> System.out.println(JSON.toJSONString(userInfo)));
             counter++;
+            System.out.println(JSON.toJSONString(msg));
             String body = "hello";
             System.out.println("this is counter " + counter + " times receive client : " + body);
             ByteBuf echo = Unpooled.copiedBuffer(body.getBytes());

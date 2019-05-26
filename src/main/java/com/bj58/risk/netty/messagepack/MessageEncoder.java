@@ -10,7 +10,8 @@ public class MessageEncoder extends MessageToByteEncoder<Object> {
     @Override
     protected void encode(ChannelHandlerContext ctx, Object msg, ByteBuf out) throws Exception {
         MessagePack messagePack = new MessagePack();
-        byte[] bytes = messagePack.write(msg);
-        out.writeBytes(bytes);
+        byte[] raw = messagePack.write(msg);
+        out.writeBytes(raw);
     }
+
 }

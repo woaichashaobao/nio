@@ -15,7 +15,9 @@ public class MessagePackTest {
         list.add("test2");
         list.add("test3");
         MessagePack messagePack = new MessagePack();
+        UserInfo userInfo = new UserInfo("jkdkd", 1);
         try {
+            byte[] bytes2 = messagePack.write(userInfo);
             byte[] bytes = messagePack.write(list);
             List<String> read = messagePack.read(bytes, Templates.tList(Templates.TString));
             read.forEach(string -> System.out.println(string));

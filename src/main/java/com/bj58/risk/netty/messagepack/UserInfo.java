@@ -1,12 +1,18 @@
 package com.bj58.risk.netty.messagepack;
 
+import org.msgpack.annotation.Message;
+
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.ObjectOutputStream;
 import java.io.Serializable;
 import java.nio.ByteBuffer;
 
+@Message
 public class UserInfo implements Serializable {
+
+    public UserInfo() {
+    }
 
     private String userName;
 
